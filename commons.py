@@ -35,101 +35,162 @@ class Pokemon:
     def is_alive(self):
         return True if self.pv > 0 else False
 
-p1 = Pokemon(nom='Boustiflor', pvm=150, pa=55, type='plante')
-p2 = Pokemon(nom='Salamèche', pvm=120, pa=60, type='feu')
-p3 = Pokemon(nom='Magicarpe', pvm=80, pa=15, type='eau')
-p4 = Pokemon(nom='Léviator', pvm=220, pa=85, type='eau')
-p5 = Pokemon(nom='Caninos', pvm=140, pa=50, type='feu')
-p6 = Pokemon(nom='Bulbizarre', pvm=160, pa=50, type='plante')
-p7 = Pokemon(nom='Ortide', pvm=170, pa=45, type='plante')
-p8 = Pokemon(nom='Ponyta', pvm=130, pa=65, type='feu')
-p9 = Pokemon(nom='Carapuce', pvm=150, pa=40, type='eau')
-p10 = Pokemon(nom='Herbizarre', pvm=180, pa=60, type='plante')
+class Team:
+    def __init__(self, pokemons):
+        if len(pokemons) != 3:
+            raise ValueError("A team must have exactly 3 Pokémon.")
+        self.pokemons = pokemons
+        self.active_index = 0
 
-liste= [p1,p2,p3,p4,p5,p6,p7,p8,p9]
+    @property
+    def active(self):
+        return self.pokemons[self.active_index]
+
+    def switch(self, idx):
+        if idx < 0 or idx >= len(self.pokemons):
+            raise ValueError("Invalid Pokémon index.")
+        if not self.pokemons[idx].is_alive():
+            raise ValueError("Cannot switch to a fainted Pokémon.")
+        self.active_index = idx
+
+    def has_alive(self):
+        return any(p.is_alive() for p in self.pokemons)
+
+    def get_alive_indices(self):
+        return [i for i, p in enumerate(self.pokemons) if p.is_alive()]
+
+    def __str__(self):
+        return " | ".join(f"[{i+1}] {p.nom} ({p.pv}/{p.pvm})" for i, p in enumerate(self.pokemons))
+
+from config import POKEMON_CONFIG
+liste = [Pokemon(**params) for params in POKEMON_CONFIG]
+
 class Match:
     def __init__(self):
-        
-        self.pokelist = liste
-    
+        self.pokelist = liste.copy()
+
     def pokemon_display(self):
         os.system('cls')
         selectionprint()
 
-
-
-
     def pokemon_selection(self):
-        inp = ''
-        while inp not in (0,1,2,3,4,5,6,7,8,9):
-            inp = int(input('choisis un numéro de pokemon parmis cette liste'))
-        self.Pokemonjoueur = self.pokelist [inp]
-        self.pokelist.pop(inp)
-        self.Pokemonadverse = self.pokelist[rd.randint(0,7)]
-        
+        temp_list = self.pokelist.copy()
+        indices = []
+        while len(indices) < 3:
+            try:
+                inp = int(input(f'Choisis le numéro du Pokémon #{len(indices)+1} (0-9, unique): '))
+                if inp in indices or inp < 0 or inp >= len(temp_list):
+                    print("Numéro invalide ou déjà choisi.")
+                    continue
+                indices.append(inp)
+            except ValueError:
+                print("Entrée invalide.")
+        team_pokemons = [temp_list[i] for i in indices]
+        # Remove selected pokemons from temp_list by index (descending to avoid shifting)
+        for i in sorted(indices, reverse=True):
+            temp_list.pop(i)
+        self.player_team = Team(team_pokemons)
+        # Adversaire : sélectionne 3 pokémons restants
+        adv_indices = rd.sample(range(len(temp_list)), 3)
+        adv_pokemons = [temp_list[i] for i in adv_indices]
+        self.enemy_team = Team(adv_pokemons)
 
     def game_content(self):
         playing = True
         self.log = ['','','']
-
-        while playing == True :
-            os.system('cls')  # Efface la console Windows
+        while playing:
+            os.system('cls')
             l1 = self.log[-1]
             l2 = self.log[-2]
             l3 = self.log[-3]
             gameprint(
-                enemy_name=self.Pokemonadverse.nom,
-                enemy_hp=self.Pokemonadverse.pv,
-                enemy_max_hp=self.Pokemonadverse.pvm,
-                ally_name=self.Pokemonjoueur.nom,
-                ally_hp=self.Pokemonjoueur.pv,
-                ally_max_hp=self.Pokemonjoueur.pvm,
+                enemy_name=self.enemy_team.active.nom,
+                enemy_hp=self.enemy_team.active.pv,
+                enemy_max_hp=self.enemy_team.active.pvm,
+                ally_name=self.player_team.active.nom,
+                ally_hp=self.player_team.active.pv,
+                ally_max_hp=self.player_team.active.pvm,
                 log1=l1,
                 log2=l2,
-                log3=l3
+                log3=l3,
+                player_team_str=str(self.player_team),
+                enemy_team_str=str(self.enemy_team)
             )
-
             t = 0
-            while t not in (1,2,3):
+            while t not in (1,2,3,4):
                 try:
                     t = int(input("👉 Que veux-tu faire ? "))
                 except ValueError:
                     t = 0
             if t == 1:
-                self.Pokemonjoueur.attaquer(self.Pokemonadverse)
-                self.log.append('le pokemon allié à attaqué')
+                self.player_team.active.attaquer(self.enemy_team.active)
+                self.log.append(f"{self.player_team.active.nom} a attaqué {self.enemy_team.active.nom}")
             elif t == 2:
-                self.Pokemonjoueur.potion()
-                self.log.append("le pokemon allié s'est soigné")
-            else:
-                self.Pokemonjoueur.passertour()
-                self.log.append("le pokemon allié à passé son tour")
-            if not self.Pokemonadverse.is_alive():
-                playing = False
-                self.winner = "Victoire"
-                continue
-
+                self.player_team.active.potion()
+                self.log.append(f"{self.player_team.active.nom} s'est soigné")
+            elif t == 3:
+                self.player_team.active.passertour()
+                self.log.append(f"{self.player_team.active.nom} a passé son tour")
+            elif t == 4:
+                alive_indices = self.player_team.get_alive_indices()
+                print("Pokémon vivants:", [(i+1, self.player_team.pokemons[i].nom) for i in alive_indices])
+                idx = -1
+                while idx not in alive_indices:
+                    try:
+                        idx = int(input("Numéro du Pokémon à envoyer au combat (1-3): ")) - 1
+                    except ValueError:
+                        idx = -1
+                self.player_team.switch(idx)
+                self.log.append(f"Changement: {self.player_team.active.nom} entre en combat!")
+            if not self.enemy_team.active.is_alive():
+                if self.enemy_team.has_alive():
+                    # Switch to next alive
+                    for i in self.enemy_team.get_alive_indices():
+                        if i != self.enemy_team.active_index:
+                            self.enemy_team.switch(i)
+                            self.log.append(f"L'adversaire envoie {self.enemy_team.active.nom}!")
+                            break
+                else:
+                    playing = False
+                    self.winner = "Victoire"
+                    continue
             time.sleep(0.5)
-            os.system('cls')  # Efface la console avant le tour adverse
-
-            t = rd.randint(1,3)
-            if t == 1:
-                self.Pokemonadverse.attaquer(self.Pokemonjoueur)
-                self.log.append('le pokemon adverse à attaqué')
-            elif t == 2:
-                self.Pokemonadverse.potion()
-                self.log.append("le pokemon adverse s'est soigné")
-            else:
-                self.Pokemonadverse.passertour()
-                self.log.append("le pokemon adverse à passé son tour")
-
-            if not self.Pokemonjoueur.is_alive():
-                playing = False
-                self.winner = 'Défaite'
+            os.system('cls')
+            # Adversaire joue
+            if not self.enemy_team.active.is_alive():
                 continue
+            t = rd.randint(1,4)
+            if t == 1:
+                self.enemy_team.active.attaquer(self.player_team.active)
+                self.log.append(f"{self.enemy_team.active.nom} a attaqué {self.player_team.active.nom}")
+            elif t == 2:
+                self.enemy_team.active.potion()
+                self.log.append(f"{self.enemy_team.active.nom} s'est soigné")
+            elif t == 3:
+                self.enemy_team.active.passertour()
+                self.log.append(f"{self.enemy_team.active.nom} a passé son tour")
+            elif t == 4:
+                alive_indices = self.enemy_team.get_alive_indices()
+                # Adversaire change si possible
+                possible = [i for i in alive_indices if i != self.enemy_team.active_index]
+                if possible:
+                    idx = rd.choice(possible)
+                    self.enemy_team.switch(idx)
+                    self.log.append(f"L'adversaire change pour {self.enemy_team.active.nom}!")
+            if not self.player_team.active.is_alive():
+                if self.player_team.has_alive():
+                    for i in self.player_team.get_alive_indices():
+                        if i != self.player_team.active_index:
+                            self.player_team.switch(i)
+                            self.log.append(f"Tu envoies {self.player_team.active.nom}!")
+                            break
+                else:
+                    playing = False
+                    self.winner = 'Défaite'
+                    continue
             time.sleep(0.5)
         os.system('cls')
         if self.winner == "Victoire":
-            winprint(self.Pokemonjoueur.nom)            
+            winprint(self.player_team.active.nom)
         else:
-            loseprint(self.Pokemonadverse.nom)
+            loseprint(self.enemy_team.active.nom)
