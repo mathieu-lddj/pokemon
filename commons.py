@@ -1,4 +1,6 @@
 import random as rd
+import os
+import time
 
 def gameprint(enemy_name, enemy_hp, enemy_max_hp, ally_name, ally_hp, ally_max_hp, log1, log2, log3):
     display = f"""
@@ -24,7 +26,6 @@ def gameprint(enemy_name, enemy_hp, enemy_max_hp, ally_name, ally_hp, ally_max_h
     
     """
     return print(display)
-
 
 class Pokemon:
     def __init__(self, nom, pvm, pa, type):
@@ -88,10 +89,10 @@ class Match:
 
     def game_content(self):
         playing = True
-
         self.log = ['','','']
 
         while playing == True :
+            os.system('cls')  # Efface la console Windows
             l1 = self.log[-1]
             l2 = self.log[-2]
             l3 = self.log[-3]
@@ -105,45 +106,70 @@ class Match:
                 log1=l1,
                 log2=l2,
                 log3=l3
-                )
+            )
 
-
-
-
-
-            t =  int(input("👉 Que veux-tu faire ?")) or 0
+            t = 0
             while t not in (1,2,3):
-                
-                print("👉 Que veux-tu faire ?", end='\r')
-                t= int(input())
-            if t ==1 :
+                try:
+                    t = int(input("👉 Que veux-tu faire ? "))
+                except ValueError:
+                    t = 0
+            if t == 1:
                 self.Pokemonjoueur.attaquer(self.Pokemonadverse)
                 self.log.append('le pokemon allié à attaqué')
-            elif t== 2:
+            elif t == 2:
                 self.Pokemonjoueur.potion()
                 self.log.append("le pokemon allié s'est soigné")
-            else :
+            else:
                 self.Pokemonjoueur.passertour()
                 self.log.append("le pokemon allié à passé son tour")
             if not self.Pokemonadverse.is_alive():
                 playing = False
-                self.winner = "Vitcoire"
-                pass
+                self.winner = "Victoire"
+                continue
+
+            time.sleep(0.5)
+            os.system('cls')  # Efface la console avant le tour adverse
 
             t = rd.randint(1,3)
-
-            if t ==1 :
+            if t == 1:
                 self.Pokemonadverse.attaquer(self.Pokemonjoueur)
                 self.log.append('le pokemon adverse à attaqué')
-            elif t== 2:
+            elif t == 2:
                 self.Pokemonadverse.potion()
                 self.log.append("le pokemon adverse s'est soigné")
-            else :
+            else:
                 self.Pokemonadverse.passertour()
                 self.log.append("le pokemon adverse à passé son tour")
 
             if not self.Pokemonjoueur.is_alive():
                 playing = False
                 self.winner = 'Défaite'
-                pass       
-        print('fin de partie') 
+                continue
+            time.sleep(0.5)
+        os.system('cls')
+        if self.winner == "Victoire":
+            print(f'''
+            ══════════════════════════════════════════════════════════════
+            🏆  FIN DE PARTIE 🏆
+            ══════════════════════════════════════════════════════════════
+
+            🎉 Le grand vainqueur est :
+            {self.Pokemonjoueur.nom} 🎉
+
+            ✨ Bravo, ton équipe remporte la victoire ! ✨
+
+            ══════════════════════════════════════════════════════════════
+            ''')
+        else:
+            print(f'''
+            ══════════════════════════════════════════════════════════════
+            💀  FIN DE PARTIE 💀
+            ══════════════════════════════════════════════════════════════
+
+            🥀 Le vainqueur est :
+            {self.Pokemonadverse.nom}
+
+            😢 Ton équipe a été vaincue... Retente ta chance !
+            ══════════════════════════════════════════════════════════════
+            ''')
