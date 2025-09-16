@@ -1,31 +1,8 @@
 import random as rd
 import os
 import time
+from config import selectionprint, gameprint, winprint, loseprint, type_effect
 
-def gameprint(enemy_name, enemy_hp, enemy_max_hp, ally_name, ally_hp, ally_max_hp, log1, log2, log3):
-    display = f"""
-    ══════════════════════════════════════════════════════
-    👾 Adversaire : {enemy_name}
-    ❤️ PV : {enemy_hp}/{enemy_max_hp}
-    ══════════════════════════════════════════════════════
-
-    📜 Journal de combat :
-    {log1}
-    {log2}
-    {log3}
-    ══════════════════════════════════════════════════════
-
-    🧑 Ton Pokémon : {ally_name}
-    ❤️ PV : {ally_hp}/{ally_max_hp}
-
-    🎮 Actions disponibles :
-    [1] ⚔️ Attaquer
-    [2] 🧴 Potion
-    [3] ⏭️ Passer le tour
-    ══════════════════════════════════════════════════════
-    
-    """
-    return print(display)
 
 class Pokemon:
     def __init__(self, nom, pvm, pa, type):
@@ -35,13 +12,15 @@ class Pokemon:
         self.pa: int = pa
         self.type: str = type
 
-    def degats(self, damage: int):
+    def degats(self, damage: int, type: str):
+        multiplier = type_effect.get(type, {}).get(self.type, 1)
+        damage *= multiplier
         self.pv -= damage
         if self.pv < 0:
-            self.pv=0
+            self.pv = 0
         
     def attaquer(self, cible):
-        cible.degats(self.pa)
+        cible.degats(damage=self.pa, type=self.type)
         
 
     def passertour(self):
@@ -56,16 +35,16 @@ class Pokemon:
     def is_alive(self):
         return True if self.pv > 0 else False
 
-p1 = Pokemon(nom='Boustiflor', pvm=180, pa=40, type='plante')
-p2 = Pokemon(nom='Salamèche', pvm=180, pa=40, type='feu')
-p3 = Pokemon(nom='magicarpe', pvm=180, pa=40, type='eau')
-p4 = Pokemon(nom='Léviator', pvm=180, pa=40, type='eau')
-p5 = Pokemon(nom='caninos', pvm=180, pa=40, type='feu')
-p6 = Pokemon(nom='Bulbizarre', pvm=180, pa=40, type='plante')
-p7 = Pokemon(nom='magicarpe', pvm=180, pa=40, type='eau')
-p8 = Pokemon(nom='Léviator', pvm=180, pa=40, type='eau')
-p9 = Pokemon(nom='caninos', pvm=180, pa=40, type='feu')
-p10 = Pokemon(nom='Bulbizarre', pvm=180, pa=40, type='plante')
+p1 = Pokemon(nom='Boustiflor', pvm=150, pa=55, type='plante')
+p2 = Pokemon(nom='Salamèche', pvm=120, pa=60, type='feu')
+p3 = Pokemon(nom='Magicarpe', pvm=80, pa=15, type='eau')
+p4 = Pokemon(nom='Léviator', pvm=220, pa=85, type='eau')
+p5 = Pokemon(nom='Caninos', pvm=140, pa=50, type='feu')
+p6 = Pokemon(nom='Bulbizarre', pvm=160, pa=50, type='plante')
+p7 = Pokemon(nom='Ortide', pvm=170, pa=45, type='plante')
+p8 = Pokemon(nom='Ponyta', pvm=130, pa=65, type='feu')
+p9 = Pokemon(nom='Carapuce', pvm=150, pa=40, type='eau')
+p10 = Pokemon(nom='Herbizarre', pvm=180, pa=60, type='plante')
 
 liste= [p1,p2,p3,p4,p5,p6,p7,p8,p9]
 class Match:
@@ -73,9 +52,11 @@ class Match:
         
         self.pokelist = liste
     
-    def pokemmon_display(self):
-        for i in range(len(self.pokelist)):
-            print(f"numéro:{i}\nnom: {self.pokelist[i].nom}\npv max: {self.pokelist[i].pvm}\npuissance d'attaque: {self.pokelist[i].pa}\ntype: {self.pokelist[i].type}\n\n")
+    def pokemon_display(self):
+        os.system('cls')
+        selectionprint()
+
+
 
 
     def pokemon_selection(self):
@@ -149,27 +130,6 @@ class Match:
             time.sleep(0.5)
         os.system('cls')
         if self.winner == "Victoire":
-            print(f'''
-            ══════════════════════════════════════════════════════════════
-            🏆  FIN DE PARTIE 🏆
-            ══════════════════════════════════════════════════════════════
-
-            🎉 Le grand vainqueur est :
-            {self.Pokemonjoueur.nom} 🎉
-
-            ✨ Bravo, ton équipe remporte la victoire ! ✨
-
-            ══════════════════════════════════════════════════════════════
-            ''')
+            winprint(self.Pokemonjoueur.nom)            
         else:
-            print(f'''
-            ══════════════════════════════════════════════════════════════
-            💀  FIN DE PARTIE 💀
-            ══════════════════════════════════════════════════════════════
-
-            🥀 Le vainqueur est :
-            {self.Pokemonadverse.nom}
-
-            😢 Ton équipe a été vaincue... Retente ta chance !
-            ══════════════════════════════════════════════════════════════
-            ''')
+            loseprint(self.Pokemonadverse.nom)
