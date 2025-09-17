@@ -89,15 +89,20 @@ def loseprint(Pokemonadversenom):
             '''
     return print(display)
 
+# Table des multiplicateurs de dégâts selon les types
+# Par exemple : l'eau est super efficace contre le feu (x2)
+# mais peu efficace contre la plante (x0.5)
 type_effect = {
     'feu': {'plante': 2, 'eau': 0.5, 'feu': 1},
     'eau': {'feu': 2, 'plante': 0.5, 'eau': 1},
     'plante': {'eau': 2, 'feu': 0.5, 'plante': 1}
 }
 
+# Nombre de PV restaurés par une potion
 POTION_HEAL = 30
 
-# Pokémon parameters centralized here
+# Configuration des Pokémon disponibles dans le jeu
+# Chaque Pokémon a un nom, des PV max (pvm), des points d'attaque (pa) et un type
 POKEMON_CONFIG = [
     {'nom': 'Boustiflor', 'pvm': 150, 'pa': 55, 'type': 'plante'},
     {'nom': 'Salamèche', 'pvm': 120, 'pa': 60, 'type': 'feu'},

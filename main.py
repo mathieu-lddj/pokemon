@@ -1,14 +1,23 @@
-from commons import Match
-jeu_en_cours = True
+from classes import Match
 
-while jeu_en_cours == True :
-    match = Match()
-    match.pokemon_display()
-    match.pokemon_selection()
-    match.game_content()
-    t = input('rejouer ? (y/n) :')
-    while t not in ['y', 'n'] :
-        t = input('rejouer ? (y/n) :')
-    else :
-        jeu_en_cours == False
-        pass
+def main():
+
+    while True:
+        # Création et déroulement d'un nouveau match
+        match = Match()
+        match.pokemon_display()       # Affiche l'écran de sélection
+        match.pokemon_selection()     # Sélection des équipes
+        match.game_content()         # Déroulement du combat
+        
+        while True:
+            replay = input('Voulez-vous rejouer ? (y/n) : ').lower()
+            if replay in ['y', 'n']:
+                break
+            print("Veuillez répondre par 'y' (oui) ou 'n' (non)")
+        
+        # Sort de la boucle si le joueur ne veut pas rejouer
+        if replay == 'n':
+            break
+
+if __name__ == "__main__":
+    main()

@@ -5,48 +5,56 @@ from config import selectionprint, gameprint, winprint, loseprint, type_effect
 from config import POKEMON_CONFIG
 
 class Pokemon:
+
     def __init__(self, nom, pvm, pa, type):
-        self.nom: str = nom
-        self.pvm: int = pvm
-        self.pv: int = pvm
-        self.pa: int = pa
-        self.type: str = type
+        self.nom = nom
+        self.pvm = pvm  # PV maximum
+        self.pv = pvm   # PV actuels, initialement au max
+        self.pa = pa    # Points d'attaque
+        self.type = type
 
     def degats(self, damage: int, type: str):
+
+        # Récupère le multiplicateur selon les types (1 par défaut si non trouvé)
         multiplier = type_effect.get(type, {}).get(self.type, 1)
         damage *= multiplier
         self.pv -= damage
+        # Les PV ne peuvent pas être négatifs
         if self.pv < 0:
             self.pv = 0
-        
+
     def attaquer(self, cible):
         cible.degats(damage=self.pa, type=self.type)
-        
 
     def passertour(self):
+        """Ne fait rien pendant ce tour"""
         pass
 
     def potion(self):
-        if self.pv > self.pvm - 30:
+
+        from config import POTION_HEAL
+        if self.pv > self.pvm - POTION_HEAL:
             self.pv = self.pvm
-        else :
-            self.pv += 30
+        else:
+            self.pv += POTION_HEAL
 
     def is_alive(self):
-        return True if self.pv > 0 else False
+        return self.pv > 0
 
 class Team:
     def __init__(self, pokemons):
         if len(pokemons) != 3:
             raise ValueError("A team must have exactly 3 Pokémon.")
-        self.pokemons = pokemons
-        self.active_index = 0
-
+        self.pokemons = pokemons 
+        self.active_index = 0  # Index du Pokémon actuellement au combat
+    
     @property
     def active(self):
+        """Retourne le Pokémon actuellement au combat"""
         return self.pokemons[self.active_index]
 
     def switch(self, idx):
+
         if idx < 0 or idx >= len(self.pokemons):
             raise ValueError("Invalid Pokémon index.")
         if not self.pokemons[idx].is_alive():
@@ -54,19 +62,25 @@ class Team:
         self.active_index = idx
 
     def has_alive(self):
+        """Vérifie s'il reste au moins un Pokémon en vie dans l'équipe"""
         return any(p.is_alive() for p in self.pokemons)
 
     def get_alive_indices(self):
+        """Retourne les indices des Pokémon encore en vie"""
         return [i for i, p in enumerate(self.pokemons) if p.is_alive()]
 
     def __str__(self):
+        """Affiche l'état de tous les Pokémon de l'équipe"""
         return " | ".join(f"[{i+1}] {p.nom} ({p.pv}/{p.pvm})" for i, p in enumerate(self.pokemons))
 
 
+# Création de la liste des Pokémon disponibles à partir de la configuration
 liste = [Pokemon(**params) for params in POKEMON_CONFIG]
 
 class Match:
+
     def __init__(self):
+        # Copie la liste des Pokémon pour ne pas modifier l'originale
         self.pokelist = liste.copy()
 
     def pokemon_display(self):
@@ -76,6 +90,7 @@ class Match:
     def pokemon_selection(self):
         temp_list = self.pokelist.copy()
         indices = []
+        # Sélection des 3 Pokémon du joueur
         while len(indices) < 3:
             try:
                 inp = int(input(f'Choisis le numéro du Pokémon #{len(indices)+1} (0-9, unique): '))
@@ -85,12 +100,16 @@ class Match:
                 indices.append(inp)
             except ValueError:
                 print("Entrée invalide.")
+        
+        # Création de l'équipe du joueur
         team_pokemons = [temp_list[i] for i in indices]
-        # Remove selected pokemons from temp_list by index (descending to avoid shifting)
+        # Retire les Pokémon choisis de la liste temporaire
         for i in sorted(indices, reverse=True):
             temp_list.pop(i)
+            
         self.player_team = Team(team_pokemons)
-        # Adversaire : sélectionne 3 pokémons restants
+        
+        # Création de l'équipe adverse aléatoirement
         adv_indices = rd.sample(range(len(temp_list)), 3)
         adv_pokemons = [temp_list[i] for i in adv_indices]
         self.enemy_team = Team(adv_pokemons)
