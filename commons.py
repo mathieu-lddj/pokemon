@@ -2,7 +2,7 @@ import random as rd
 import os
 import time
 from config import selectionprint, gameprint, winprint, loseprint, type_effect
-
+from config import POKEMON_CONFIG
 
 class Pokemon:
     def __init__(self, nom, pvm, pa, type):
@@ -62,7 +62,7 @@ class Team:
     def __str__(self):
         return " | ".join(f"[{i+1}] {p.nom} ({p.pv}/{p.pvm})" for i, p in enumerate(self.pokemons))
 
-from config import POKEMON_CONFIG
+
 liste = [Pokemon(**params) for params in POKEMON_CONFIG]
 
 class Match:
