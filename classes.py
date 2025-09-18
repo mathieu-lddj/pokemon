@@ -1,8 +1,8 @@
 import random as rd
 import os
 import time
-from config import selectionprint, gameprint, winprint, loseprint, type_effect
-from config import POKEMON_CONFIG
+from config import selectionprint, gameprint, winprint, loseprint, type_effect, POKEMON_CONFIG, POTION_HEAL
+
 
 class Pokemon:
 
@@ -32,7 +32,7 @@ class Pokemon:
 
     def potion(self):
 
-        from config import POTION_HEAL
+        
         if self.pv > self.pvm - POTION_HEAL:
             self.pv = self.pvm
         else:
@@ -48,7 +48,6 @@ class Team:
         self.pokemons = pokemons 
         self.active_index = 0  # Index du Pokémon actuellement au combat
     
-    @property
     def active(self):
         """Retourne le Pokémon actuellement au combat"""
         return self.pokemons[self.active_index]
@@ -161,6 +160,9 @@ class Match:
                         idx = -1
                 self.player_team.switch(idx)
                 self.log.append(f"Changement: {self.player_team.active.nom} entre en combat!")
+
+            #tour de l'aversaire
+
             if not self.enemy_team.active.is_alive():
                 if self.enemy_team.has_alive():
                     # Switch to next alive
